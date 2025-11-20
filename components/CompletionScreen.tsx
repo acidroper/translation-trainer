@@ -7,22 +7,22 @@ interface CompletionScreenProps {
 
 const CompletionScreen: React.FC<CompletionScreenProps> = ({ onRestart }) => {
   return (
-    <div className="text-center bg-white dark:bg-slate-800 p-8 rounded-xl shadow-lg animate-fade-in">
-      <div className="w-16 h-16 bg-green-100 dark:bg-green-900 rounded-full mx-auto flex items-center justify-center">
-        <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-brand-green" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <div className="text-center bg-white dark:bg-zinc-900 p-12 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-soft animate-fade-in">
+      <div className="w-16 h-16 bg-zinc-100 dark:bg-zinc-800 rounded-full mx-auto flex items-center justify-center mb-6">
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-zinc-900 dark:text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
         </svg>
       </div>
-      <h2 className="mt-4 text-2xl font-bold text-slate-900 dark:text-white">Поздравляем!</h2>
-      <p className="mt-2 text-slate-600 dark:text-slate-300">
-        Вы успешно перевели все предложения. Отличная работа!
+      <h2 className="text-2xl font-bold text-zinc-900 dark:text-white tracking-tight">Готово</h2>
+      <p className="mt-2 text-zinc-500 dark:text-zinc-400">
+        Тренировка завершена.
       </p>
-      <div className="mt-6">
+      <div className="mt-8">
         <button
           onClick={onRestart}
-          className="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-brand-blue hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-light-blue transition-colors"
+          className="inline-flex items-center justify-center px-8 py-3 border border-transparent text-sm font-semibold rounded-xl text-white bg-zinc-900 dark:bg-white dark:text-black hover:bg-zinc-800 dark:hover:bg-zinc-200 transition-all"
         >
-          Новая тренировка
+          Начать заново
         </button>
       </div>
     </div>

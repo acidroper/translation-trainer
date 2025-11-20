@@ -1,5 +1,7 @@
 {
   "name": "Translation Trainer",
   "description": "An application to practice translating text sentence by sentence with AI-powered feedback from Gemini. Users can choose the topic, difficulty, and length of the text.",
-  "requestFramePermissions": []
+  "requestFramePermissions": [
+    "microphone"
+  ]
 }

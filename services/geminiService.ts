@@ -1,3 +1,4 @@
+
 import { GoogleGenAI, Type } from "@google/genai";
 import { TranslationFeedback } from '../types';
 
@@ -7,6 +8,13 @@ const SIZES_MAP: { [key: string]: string } = {
   short: '3-4 sentences',
   medium: '5-7 sentences',
   long: '8-10 sentences',
+};
+
+const STYLE_PROMPTS: { [key: string]: string } = {
+    educational: 'informative, educational, containing interesting facts',
+    artistic: 'literary, descriptive, rich in imagery and metaphors',
+    conversational: 'informal, dialogue-heavy, using everyday language',
+    random: 'random', // Handled specifically
 };
 
 const textGenerationSchema = {
@@ -21,15 +29,43 @@ const textGenerationSchema = {
 };
 
 
-export const generateText = async (topic: string, difficulty: string, size: string): Promise<string[]> => {
+export const generateText = async (topic: string, difficulty: string, size: string, style: string): Promise<string[]> => {
   const sentenceCount = SIZES_MAP[size] || '5-7 sentences';
 
+  let selectedStylePrompt = STYLE_PROMPTS[style];
+
+  if (style === 'random' || !selectedStylePrompt) {
+      const styles = [
+        'an engaging short story or narrative',
+        'an interesting informative snippet or fun fact',
+        'a personal diary entry or blog post',
+        'a vivid description of a scene or event',
+        'a piece of advice or recommendation',
+        'a short dialogue narrative'
+      ];
+      selectedStylePrompt = styles[Math.floor(Math.random() * styles.length)];
+  }
+  
   const prompt = `
-    Generate a coherent text in Russian on the topic of "${topic}".
-    The text should be suitable for a language learner with a "${difficulty}" level of proficiency.
-    The text should be approximately ${sentenceCount} long.
-    Please respond with a JSON object containing a single key "text" with the generated text as its value.
-    The text must be split into sentences.
+    Act as a creative Russian language tutor. 
+    Generate a unique, cohesive, and engaging text in Russian.
+    
+    Parameters:
+    - Topic: "${topic}"
+    - Proficiency Level: "${difficulty}" (Common European Framework of Reference for Languages context)
+    - Length: Approximately ${sentenceCount}.
+    - Style: ${selectedStylePrompt}.
+
+    Strict Guidelines:
+    1. The text MUST be in Russian.
+    2. Make it sound natural and human-like, NOT like a robotic textbook.
+    3. Use diverse vocabulary and sentence structures appropriate for the '${difficulty}' level.
+    4. Avoid starting consecutive sentences with the same word (e.g., avoid starting every sentence with "He" or "The").
+    5. Ensure logical flow between sentences.
+    6. Do NOT provide a list of bullet points. It must be a paragraph.
+
+    Output Format:
+    Respond with a JSON object containing a single key "text" with the generated Russian text string.
   `;
 
   try {
@@ -39,7 +75,7 @@ export const generateText = async (topic: string, difficulty: string, size: stri
         config: {
             responseMimeType: "application/json",
             responseSchema: textGenerationSchema,
-            temperature: 0.7,
+            temperature: 1.5, // Increased for more creativity and variety
         },
     });
 
@@ -51,8 +87,11 @@ export const generateText = async (topic: string, difficulty: string, size: stri
     }
 
     // Split text into sentences using a regex that handles various punctuation.
-    const sentences = parsedResponse.text.match(/[^.!?]+[.!?]+/g) || [];
-    return sentences.map(s => s.trim()).filter(s => s.length > 0);
+    // We look for a period, exclamation, or question mark followed by a space or end of string.
+    // We also handle cases like "г. Москва" or initials to avoid incorrect splitting (basic heuristic).
+    const rawSentences = parsedResponse.text.match(/[^.!?]+[.!?]+(?=\s|$)/g) || [parsedResponse.text];
+    
+    return rawSentences.map(s => s.trim()).filter(s => s.length > 0);
 
   } catch (error) {
     console.error("Error calling Gemini API for text generation:", error);
@@ -66,7 +105,7 @@ const responseSchema = {
   properties: {
     isCorrect: {
       type: Type.BOOLEAN,
-      description: "Is the user's English translation grammatically and semantically correct? Consider minor typos as incorrect.",
+      description: "Is the user's English translation grammatically and semantically correct? Ignore case sensitivity and punctuation errors. Focus on word choice and sentence structure.",
     },
     correctedTranslation: {
       type: Type.STRING,
@@ -96,6 +135,11 @@ export const evaluateTranslation = async (originalSentence: string, userTranslat
     User's English Translation: "${userTranslation}"
     
     Provide your evaluation in the specified JSON format. Be a helpful and encouraging language tutor. Your feedback should be in Russian.
+
+    IMPORTANT RULES FOR EVALUATION:
+    1. Ignore case sensitivity (e.g., 'apple' is the same as 'Apple').
+    2. Ignore punctuation differences (e.g., missing periods, commas, or question marks should NOT count as errors unless they change the meaning drastically).
+    3. Mark 'isCorrect' as true if the words and grammar are correct, even if punctuation or casing is off.
   `;
 
   try {
